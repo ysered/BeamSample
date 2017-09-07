@@ -1,0 +1,53 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+
+android {
+    compileSdkVersion 26
+    buildToolsVersion "26.0.1"
+    defaultConfig {
+        applicationId "com.ysered.beamsample"
+        minSdkVersion 16
+        targetSdkVersion 26
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+ext {
+    coroutinesVersion = '0.18'
+    supportLibraryVersion = '26.0.2'
+    constraintLayoutVersion = '1.0.2'
+    archVersion = '1.0.0-alpha9'
+    junitVersion = '4.12'
+    espressoVersion = '2.2.2'
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion"
+
+    implementation "com.android.support:appcompat-v7:$supportLibraryVersion"
+    implementation "com.android.support.constraint:constraint-layout:$constraintLayoutVersion"
+
+    // Architecture components
+    compile "android.arch.lifecycle:extensions:$archVersion"
+    compile "android.arch.lifecycle:runtime:$archVersion"
+    compile "android.arch.persistence.room:runtime:$archVersion"
+    kapt "android.arch.lifecycle:compiler:$archVersion"
+    kapt "android.arch.persistence.room:compiler:$archVersion"
+
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation("com.android.support.test.espresso:espresso-core:$espressoVersion", {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+}
