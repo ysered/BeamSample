@@ -6,6 +6,10 @@ fun View.show() {
     this.visibility = View.VISIBLE
 }
 
+fun View.setVisibility(isVisible: Boolean) {
+    if (isVisible) this.show() else this.hide()
+}
+
 fun View.hide() {
     this.visibility = View.INVISIBLE
 }
