@@ -5,4 +5,6 @@
     <string name="nfc_not_available">NFC is not available</string>
     <string name="tasks">Tasks</string>
     <string name="tasks_received">Tasks Received</string>
+    <string name="summary">Summary</string>
+    <string name="addTask">Add task</string>
 </resources>
