@@ -9,7 +9,10 @@ import android.widget.TextView
 import com.ysered.beamsample.database.TaskEntity
 import com.ysered.beamsample.util.setVisibility
 
-class TasksAdapter(private val tasks: List<TaskEntity>) : RecyclerView.Adapter<TasksAdapter.TaskViewHolder>() {
+class TasksAdapter(
+        private val tasks: MutableList<TaskEntity> = mutableListOf(),
+        private val onTaskClickListener: OnTaskClickListener
+) : RecyclerView.Adapter<TasksAdapter.TaskViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): TaskViewHolder {
         val itemView = LayoutInflater.from(parent?.context)?.inflate(R.layout.item_task, parent, false)
@@ -17,18 +20,36 @@ class TasksAdapter(private val tasks: List<TaskEntity>) : RecyclerView.Adapter<T
     }
 
     override fun onBindViewHolder(holder: TaskViewHolder?, position: Int) {
-        holder?.bind(tasks[position])
+        tasks.getOrNull(position)?.let { holder?.bind(it) }
     }
 
     override fun getItemCount(): Int = tasks.size
+
+    fun updateAll(tasks: List<TaskEntity>) {
+        this.tasks.clear()
+        this.tasks.addAll(tasks)
+        // TODO: use DiffUtil to notify which items were updated instead of refreshing all list
+        notifyDataSetChanged()
+    }
 
     inner class TaskViewHolder(itemView: View?) : RecyclerView.ViewHolder(itemView) {
         private val doneImage = itemView?.findViewById<ImageView>(R.id.doneImage)
         private val summaryText = itemView?.findViewById<TextView>(R.id.summaryText)
 
+        init {
+            itemView?.setOnClickListener {
+                val task = tasks[adapterPosition].apply { isDone = !isDone }
+                onTaskClickListener.onClicked(task)
+            }
+        }
+
         fun bind(task: TaskEntity) {
             doneImage?.setVisibility(task.isDone)
             summaryText?.text = task.summary
         }
+    }
+
+    interface OnTaskClickListener {
+        fun onClicked(task: TaskEntity)
     }
 }

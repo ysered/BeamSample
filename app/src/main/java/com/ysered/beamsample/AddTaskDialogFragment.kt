@@ -8,23 +8,27 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.widget.Button
 import android.widget.EditText
-import com.ysered.beamsample.database.Repository
 import com.ysered.beamsample.di.InjectableFragment
+import com.ysered.beamsample.di.ViewModelFactory
 import javax.inject.Inject
 
 
 class AddTaskDialogFragment : DialogFragment(), InjectableFragment {
 
-    @Inject lateinit var repository: Repository
+    @Inject lateinit var viewModelFactory: ViewModelFactory
+    private lateinit var tasksViewModel: TasksViewModel
     private lateinit var summaryText: EditText
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        tasksViewModel = viewModelFactory.create(TasksViewModel::class.java)
+
         val dialog = AlertDialog.Builder(activity)
                 .setTitle(R.string.addTask)
                 .setView(R.layout.dialog_add_task)
                 .setNegativeButton(android.R.string.cancel, null)
                 .setPositiveButton(android.R.string.ok, { _, _ ->
-
+                    val summary = summaryText.text.toString()
+                    tasksViewModel.saveTask(summary)
                 })
                 .create()
         dialog.show()
@@ -43,4 +47,3 @@ class AddTaskDialogFragment : DialogFragment(), InjectableFragment {
         return dialog
     }
 }
-

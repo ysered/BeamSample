@@ -15,8 +15,11 @@ import android.os.Bundle
 import android.provider.Settings
 import android.support.design.widget.FloatingActionButton
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.DividerItemDecoration
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
+import com.ysered.beamsample.database.TaskEntity
 import com.ysered.beamsample.di.ViewModelFactory
-import com.ysered.beamsample.util.debug
 import com.ysered.beamsample.util.toast
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
@@ -32,6 +35,8 @@ class MainActivity : AppCompatActivity(), LifecycleOwner, HasActivityInjector, N
     @Inject lateinit var viewModelFactory: ViewModelFactory
     private lateinit var tasksViewModel: TasksViewModel
 
+    private lateinit var tasksRv: RecyclerView
+    private lateinit var tasksAdapter: TasksAdapter
     private lateinit var addFab: FloatingActionButton
 
     override fun getLifecycle(): Lifecycle = lifecycle
@@ -42,6 +47,16 @@ class MainActivity : AppCompatActivity(), LifecycleOwner, HasActivityInjector, N
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        tasksRv = findViewById(R.id.tasksRv)
+        tasksRv.layoutManager = LinearLayoutManager(this)
+        tasksRv.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
+        tasksAdapter = TasksAdapter(onTaskClickListener = object : TasksAdapter.OnTaskClickListener {
+            override fun onClicked(task: TaskEntity) {
+                tasksViewModel.updateTask(task)
+            }
+        })
+        tasksRv.adapter = tasksAdapter
+
         addFab = findViewById(R.id.fab)
         addFab.setOnClickListener {
             AddTaskDialogFragment().show(supportFragmentManager, null)
@@ -50,7 +65,9 @@ class MainActivity : AppCompatActivity(), LifecycleOwner, HasActivityInjector, N
         tasksViewModel = viewModelFactory.create(TasksViewModel::class.java)
 
         tasksViewModel.tasks.observe(this, Observer { tasks ->
-            debug("Observed tasks: $tasks")
+            tasks?.let {
+                tasksAdapter.updateAll(it)
+            }
         })
 
         val nfcAdapter = NfcAdapter.getDefaultAdapter(this)
