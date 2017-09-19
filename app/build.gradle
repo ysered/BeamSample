@@ -20,7 +20,13 @@ android {
         }
     }
     buildTypes {
+        debug {
+            resValue "string", "custom_mime_type", "application/vnd.com.ysered.beamsample"
+            buildConfigField "String", "CUSTOM_MIME_TYPE", '"application/vnd.com.ysered.beamsample"'
+        }
         release {
+            resValue "string", "custom_mime_type", "application/vnd.com.ysered.beamsample"
+            buildConfigField "String", "CUSTOM_MIME_TYPE", '"application/vnd.com.ysered.beamsample"'
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

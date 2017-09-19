@@ -4,12 +4,12 @@ import android.nfc.NdefMessage
 import android.nfc.NfcAdapter
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.widget.TextView
+import com.ysered.beamsample.database.TaskEntity
+import com.ysered.beamsample.util.ParcelableUtils
+import com.ysered.beamsample.util.debug
 
 
 class ReceiveActivity : AppCompatActivity() {
-
-    private val messageText by lazy { findViewById<TextView>(R.id.messageText) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,8 +29,11 @@ class ReceiveActivity : AppCompatActivity() {
     }
 
     private fun showMessage(message: NdefMessage) {
-        message.records.firstOrNull()?.let {
-            messageText.text = String(it.payload)
+        if (message.records.isNotEmpty()) {
+            message.records.forEach {
+                val entity = ParcelableUtils.parcelableFromBytes(it.payload, TaskEntity.CREATOR)
+                debug("Received entity: $entity")
+            }
         }
     }
 }

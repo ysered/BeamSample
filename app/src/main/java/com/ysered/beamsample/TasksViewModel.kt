@@ -19,7 +19,8 @@ class TasksViewModel @Inject constructor(
 
     fun saveTask(summary: String) {
         launch(CommonPool + job) {
-            tasksDao.save(TaskEntity(id = 0, isDone = false, summary = summary))
+            val entity = TaskEntity().apply { this.summary = summary }
+            tasksDao.save(entity)
         }
     }
 

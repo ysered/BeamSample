@@ -9,8 +9,6 @@ import android.content.Intent
 import android.nfc.NdefMessage
 import android.nfc.NdefRecord
 import android.nfc.NfcAdapter
-import android.nfc.NfcEvent
-import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.support.design.widget.FloatingActionButton
@@ -20,6 +18,7 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import com.ysered.beamsample.database.TaskEntity
 import com.ysered.beamsample.di.ViewModelFactory
+import com.ysered.beamsample.util.toByteArray
 import com.ysered.beamsample.util.toast
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
@@ -27,7 +26,7 @@ import dagger.android.HasActivityInjector
 import javax.inject.Inject
 
 
-class MainActivity : AppCompatActivity(), LifecycleOwner, HasActivityInjector, NfcAdapter.CreateNdefMessageCallback {
+class MainActivity : AppCompatActivity(), LifecycleOwner, HasActivityInjector {
 
     private val lifecycle = LifecycleRegistry(this)
 
@@ -38,6 +37,9 @@ class MainActivity : AppCompatActivity(), LifecycleOwner, HasActivityInjector, N
     private lateinit var tasksRv: RecyclerView
     private lateinit var tasksAdapter: TasksAdapter
     private lateinit var addFab: FloatingActionButton
+
+    private var nfcAdapter: NfcAdapter? = null
+    private var tasks: List<TaskEntity>? = null
 
     override fun getLifecycle(): Lifecycle = lifecycle
 
@@ -65,28 +67,40 @@ class MainActivity : AppCompatActivity(), LifecycleOwner, HasActivityInjector, N
         tasksViewModel = viewModelFactory.create(TasksViewModel::class.java)
 
         tasksViewModel.tasks.observe(this, Observer { tasks ->
+            this.tasks = tasks
             tasks?.let {
                 tasksAdapter.updateAll(it)
             }
         })
 
-        val nfcAdapter = NfcAdapter.getDefaultAdapter(this)
+        nfcAdapter = NfcAdapter.getDefaultAdapter(this)?.apply {
+            if (!this.isEnabled) {
+                toast(R.string.enable_nfc)
+                startActivity(Intent(Settings.ACTION_NFC_SETTINGS))
+            } else if (!this.isNdefPushEnabled) {
+                toast(R.string.enable_beam)
+                startActivity(Intent(Settings.ACTION_NFCSHARING_SETTINGS))
+            }
+        }
         if (nfcAdapter == null) {
             toast(R.string.nfc_not_available)
-        } else if (!nfcAdapter.isEnabled) {
-            toast(R.string.enable_nfc)
-            startActivity(Intent(Settings.ACTION_NFC_SETTINGS))
-        } else if (!nfcAdapter.isNdefPushEnabled) {
-            toast(R.string.enable_beam)
-            startActivity(Intent(Settings.ACTION_NFCSHARING_SETTINGS))
-        } else {
-            nfcAdapter.setNdefPushMessageCallback(this, this)
         }
     }
 
-    override fun createNdefMessage(nfcEvent: NfcEvent?): NdefMessage {
-        val plainMessage = "Hello from ${Build.MANUFACTURER.toUpperCase()} ${Build.MODEL}!"
-        val record = NdefRecord.createMime("text/plain", plainMessage.toByteArray())
-        return NdefMessage(record)
+    override fun onResume() {
+        super.onResume()
+        nfcAdapter?.enableForegroundNdefPush(this, createNdefMessage())
+    }
+
+    override fun onPause() {
+        super.onPause()
+        nfcAdapter?.disableForegroundNdefPush(this)
+    }
+
+    private fun createNdefMessage(): NdefMessage {
+        val records = tasks
+                ?.map { NdefRecord.createMime(BuildConfig.CUSTOM_MIME_TYPE, it.toByteArray()) }
+                ?.toTypedArray() ?: arrayOf(NdefRecord.createMime(BuildConfig.CUSTOM_MIME_TYPE, byteArrayOf()))
+        return NdefMessage(records)
     }
 }
