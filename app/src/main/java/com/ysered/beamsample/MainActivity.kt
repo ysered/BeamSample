@@ -9,6 +9,7 @@ import android.content.Intent
 import android.nfc.NdefMessage
 import android.nfc.NdefRecord
 import android.nfc.NfcAdapter
+import android.nfc.NfcEvent
 import android.os.Bundle
 import android.provider.Settings
 import android.support.design.widget.FloatingActionButton
@@ -26,7 +27,7 @@ import dagger.android.HasActivityInjector
 import javax.inject.Inject
 
 
-class MainActivity : AppCompatActivity(), LifecycleOwner, HasActivityInjector {
+class MainActivity : AppCompatActivity(), LifecycleOwner, HasActivityInjector, NfcAdapter.CreateNdefMessageCallback {
 
     private val lifecycle = LifecycleRegistry(this)
 
@@ -39,7 +40,6 @@ class MainActivity : AppCompatActivity(), LifecycleOwner, HasActivityInjector {
     private lateinit var addFab: FloatingActionButton
 
     private var nfcAdapter: NfcAdapter? = null
-    private var tasks: List<TaskEntity>? = null
 
     override fun getLifecycle(): Lifecycle = lifecycle
 
@@ -67,7 +67,6 @@ class MainActivity : AppCompatActivity(), LifecycleOwner, HasActivityInjector {
         tasksViewModel = viewModelFactory.create(TasksViewModel::class.java)
 
         tasksViewModel.tasks.observe(this, Observer { tasks ->
-            this.tasks = tasks
             tasks?.let {
                 tasksAdapter.updateAll(it)
             }
@@ -84,23 +83,15 @@ class MainActivity : AppCompatActivity(), LifecycleOwner, HasActivityInjector {
         }
         if (nfcAdapter == null) {
             toast(R.string.nfc_not_available)
+        } else {
+            nfcAdapter?.setNdefPushMessageCallback(this, this)
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        nfcAdapter?.enableForegroundNdefPush(this, createNdefMessage())
-    }
-
-    override fun onPause() {
-        super.onPause()
-        nfcAdapter?.disableForegroundNdefPush(this)
-    }
-
-    private fun createNdefMessage(): NdefMessage {
-        val records = tasks
-                ?.map { NdefRecord.createMime(BuildConfig.CUSTOM_MIME_TYPE, it.toByteArray()) }
-                ?.toTypedArray() ?: arrayOf(NdefRecord.createMime(BuildConfig.CUSTOM_MIME_TYPE, byteArrayOf()))
+    override fun createNdefMessage(nfcEvent: NfcEvent?): NdefMessage {
+        val records = tasksAdapter.tasks
+                .map { NdefRecord.createMime(BuildConfig.CUSTOM_MIME_TYPE, it.toByteArray()) }
+                .toTypedArray()
         return NdefMessage(records)
     }
 }

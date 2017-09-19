@@ -10,7 +10,7 @@ import com.ysered.beamsample.database.TaskEntity
 import com.ysered.beamsample.util.setVisibility
 
 class TasksAdapter(
-        private val tasks: MutableList<TaskEntity> = mutableListOf(),
+        val tasks: MutableList<TaskEntity> = mutableListOf(),
         private val onTaskClickListener: OnTaskClickListener
 ) : RecyclerView.Adapter<TasksAdapter.TaskViewHolder>() {
 

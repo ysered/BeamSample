@@ -6,7 +6,7 @@ import android.arch.persistence.room.*
 @Dao
 interface TasksDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun save(taskEntity: TaskEntity)
+    fun save(vararg taskEntity: TaskEntity)
 
     @Update
     fun update(taskEntity: TaskEntity)
